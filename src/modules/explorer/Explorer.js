@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
+
+import UpArrow from "../../components/Icon/UpArrow";
+import SearchIcon from "../../components/Icon/SearchIcon";
+import fileIcon from "../../assets/images/file.png";
+import folderIcon from "../../assets/images/folder.png";
+import AddIcon from "../../components/Icon/AddIcon";
+import ExplorerSrvc from "../../services/explorer.service";
+import Modal from "../../components/Modal";
+import Dropdown from "../../components/Dropdown";
+
 import "./Explorer.scss";
-import UpArrow from "./components/Icon/UpArrow";
-import SearchIcon from "./components/Icon/SearchIcon";
-import fileIcon from "./assets/images/file.png";
-import folderIcon from "./assets/images/folder.png";
-import AddIcon from "./components/Icon/AddIcon";
-import CloseIcon from "./components/Icon/CloseIcon";
-import ExplorerSrvc from "./services/explorer.service";
+
 /**
  * Content DS:
  *   - id
@@ -94,7 +98,6 @@ export default function Explorer() {
   };
 
   const handleOpenDrodown = (e, i) => {
-    console.log(e, i);
     e.preventDefault();
     dropdown[i] = !dropdown[i];
     setDropdown([...dropdown]);
@@ -104,7 +107,6 @@ export default function Explorer() {
   };
 
   const onSetContentType = (type) => {
-    console.log(type, 103);
     setContentType(type);
   };
 
@@ -116,9 +118,7 @@ export default function Explorer() {
     }
   };
 
-  const handleCopy = (content) => {
-    alert("will implement later");
-  };
+  const handleCopy = (content) => {};
 
   const stepNBack = (n) => {
     setPastIndexes(pastIndexes.slice(0, n));
@@ -148,7 +148,7 @@ export default function Explorer() {
             <div className="breadcrumbs">
               <ul>
                 {pastIndexes.map((pastIndex, index) => (
-                  <li onClick={() => stepNBack(index)}>
+                  <li key={index} onClick={() => stepNBack(index)}>
                     {getNameByIndex(pastIndex)}
                   </li>
                 ))}
@@ -190,7 +190,7 @@ export default function Explorer() {
             )
             .map((content, i) => {
               return content.type === "file" ? (
-                <div className="folder-row__item">
+                <div className="folder-row__item" key={content.id}>
                   <div
                     onContextMenu={(e) => handleOpenDrodown(e, i)}
                     onBlur={(e) => handleOpenDrodown(e, i)}
@@ -202,50 +202,19 @@ export default function Explorer() {
                     <span>{content.name}</span>
                   </div>
                   {dropdown[i] && (
-                    <div className="fileActionDropdown">
-                      <ul>
-                        <li>
-                          <button
-                            type="button"
-                            className="dropdown-item"
-                            onClick={(e) => {
-                              handleCopy(content);
-                              handleOpenDrodown(e, i);
-                            }}
-                          >
-                            Copy
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            onClick={(e) => {
-                              handleRename(content, `${content.name}_rename`);
-                              handleOpenDrodown(e, i);
-                            }}
-                            type="button"
-                            className="dropdown-item"
-                          >
-                            Rename
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            onClick={(e) => {
-                              handleDelete(e, content);
-                              handleOpenDrodown(e, i);
-                            }}
-                            type="button"
-                            className="dropdown-item"
-                          >
-                            Delete
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
+                    <Dropdown
+                      handleCopy={handleCopy}
+                      handleOpenDrodown={handleOpenDrodown}
+                      handleRename={handleRename}
+                      handleDelete={handleDelete}
+                      content={content}
+                      index={i}
+                      key={content.id}
+                    />
                   )}
                 </div>
               ) : (
-                <div className="folder-row__item">
+                <div className="folder-row__item" key={content.id}>
                   <button
                     className="btn btn-inline-icon fileitem"
                     onDoubleClick={() => {
@@ -254,7 +223,6 @@ export default function Explorer() {
                       setActiveIndex(content.id);
                     }}
                     onContextMenu={(e) => handleOpenDrodown(e, i)}
-                    // onBlur={(e) => handleOpenDrodown(e, i)}
                   >
                     <span className="icon">
                       <img src={folderIcon} alt={content.name} />
@@ -262,46 +230,15 @@ export default function Explorer() {
                     <span>{content.name}</span>
                   </button>
                   {dropdown[i] && (
-                    <div className="fileActionDropdown">
-                      <ul>
-                        <li>
-                          <button
-                            type="button"
-                            className="dropdown-item"
-                            onClick={(e) => {
-                              handleCopy(content);
-                              handleOpenDrodown(e, i);
-                            }}
-                          >
-                            Copy
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              handleRename(content, `${content.name}_rename`);
-                              handleOpenDrodown(e, i);
-                            }}
-                            className="dropdown-item"
-                          >
-                            Rename
-                          </button>
-                        </li>
-                        <li>
-                          <button
-                            onClick={(e) => {
-                              handleDelete(e, content);
-                              handleOpenDrodown(e, i);
-                            }}
-                            type="button"
-                            className="dropdown-item"
-                          >
-                            Delete
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
+                    <Dropdown
+                      handleCopy={handleCopy}
+                      handleOpenDrodown={handleOpenDrodown}
+                      handleRename={handleRename}
+                      handleDelete={handleDelete}
+                      content={content}
+                      index={i}
+                      key={content.id}
+                    />
                   )}
                 </div>
               );
@@ -318,76 +255,17 @@ export default function Explorer() {
         </div>
       </div>
       {crateFolderModal && (
-        <div className="crateFolderModal">
-          <div className="foder-modal-content">
-            <button
-              type="Button"
-              onClick={handleOpenCreateFolderModal}
-              className="btn btn-inline-icon btn-close"
-            >
-              <CloseIcon />
-            </button>
-            <div className="modalTitle">Create New</div>
-            <div className="ModalBody">
-              <div className="radio-group">
-                <div
-                  className="radioItem"
-                  onClick={() => onSetContentType("file")}
-                >
-                  <input
-                    checked={contentType === "file"}
-                    id="file"
-                    type="radio"
-                    name="file"
-                  />
-                  <label forName="file">File</label>
-                </div>
-                <div
-                  className="radioItem"
-                  onClick={() => onSetContentType("folder")}
-                >
-                  <input
-                    id="Folder"
-                    type="radio"
-                    name="folder"
-                    checked={contentType !== "file"}
-                  />
-                  <label forName="Folder">Folder</label>
-                </div>
-              </div>
-              <div className="form-group">
-                <input
-                  value={filename}
-                  onChange={(e) => {
-                    setFilename(e.target.value);
-                    setShowError(false);
-                  }}
-                  className={"form-control " + (showError ? "not-valid" : "")}
-                />
-                {showError && (
-                  <p className="error-message">
-                    File / Folder Name alredy exists!
-                  </p>
-                )}
-              </div>
-              <div className="form-submit">
-                <button type="submit" onClick={createContent}>
-                  Create
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Modal
+          handleOpenCreateFolderModal={handleOpenCreateFolderModal}
+          onSetContentType={onSetContentType}
+          setFilename={setFilename}
+          setShowError={setShowError}
+          createContent={createContent}
+          contentType={contentType}
+          showError={showError}
+          filename={filename}
+        />
       )}
-      {/* <button onClick={addNewFile}>Add New File</button>
-      <button onClick={addNewFolder}>Add New Folder</button>
-      <input
-        type="text"
-        value={filename}
-        onChange={(e) => {
-          setFilename(e.target.value);
-        }}
-      /> */}
     </div>
   );
 }
