@@ -11,7 +11,6 @@ export default function Modal({
   showError,
   filename,
 }) {
-  console.log(filename);
   return (
     <div className="crateFolderModal">
       <div className="foder-modal-content">
@@ -33,7 +32,7 @@ export default function Modal({
                 name="file"
                 readOnly
               />
-              <label forName="file">File</label>
+              <label htmlFor="file">File</label>
             </div>
             <div
               className="radioItem"
@@ -46,7 +45,7 @@ export default function Modal({
                 checked={contentType !== "file"}
                 readOnly
               />
-              <label forName="Folder">Folder</label>
+              <label htmlFor="folder">Folder</label>
             </div>
           </div>
           <div className="form-group">

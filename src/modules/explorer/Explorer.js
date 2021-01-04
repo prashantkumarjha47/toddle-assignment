@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { lazy, useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 
-import UpArrow from "../../components/Icon/UpArrow";
-import SearchIcon from "../../components/Icon/SearchIcon";
+import ExplorerSrvc from "../../services/explorer.service";
 import fileIcon from "../../assets/images/file.png";
 import folderIcon from "../../assets/images/folder.png";
-import AddIcon from "../../components/Icon/AddIcon";
-import ExplorerSrvc from "../../services/explorer.service";
-import Modal from "../../components/Modal";
-import Dropdown from "../../components/Dropdown";
-
 import "./Explorer.scss";
+
+const UpArrow = lazy(() => import("../../components/Icon/UpArrow"));
+const SearchIcon = lazy(() => import("../../components/Icon/SearchIcon"));
+const AddIcon = lazy(() => import("../../components/Icon/AddIcon"));
+const Modal = lazy(() => import("../../components/Modal"));
+const Dropdown = lazy(() => import("../../components/Dropdown"));
 
 /**
  * Content DS:
@@ -30,21 +31,30 @@ export default function Explorer() {
   const [search, setSearch] = useState("");
   const [rootId, setRootId] = useState();
   const [showError, setShowError] = useState(false);
-
+  const history = useHistory();
   useEffect(() => {
-    ExplorerSrvc.getAllExplorer().then((res) => {
-      setContents([...res]);
+    ExplorerSrvc.getAllExplorer()
+      .then((res) => {
+        setContents([...res]);
 
-      const id = res.find((r) => r.parentId === null)?.id;
-      setRootId(id);
-      setActiveIndex(id);
-    });
+        const id = res.find((r) => r.parentId === null)?.id;
+        setRootId(id);
+        setActiveIndex(id);
+      })
+      .catch((err) => {
+        alert("Fail to fetch records. Redirecting back to login page");
+        history.push("/login");
+      });
   }, []);
 
-  const create = (type) => {
-    const filenameExist = contents
+  const nameAlreadyExist = (name = filename) => {
+    return contents
       .filter((content) => content.parentId === activeIndex)
-      .some((content) => content.name === filename);
+      .some((content) => content.name === name);
+  };
+
+  const create = (type) => {
+    const filenameExist = nameAlreadyExist();
 
     if (filenameExist) {
       console.log("Filename already exist");
@@ -65,10 +75,14 @@ export default function Explorer() {
 
     if (newFile) {
       setDropdown([...dropdown, false]);
-      ExplorerSrvc.addContent(newFile).then((contents) => {
-        setContents(contents);
-        setFilename("");
-      });
+      ExplorerSrvc.addContent(newFile)
+        .then((contents) => {
+          setContents(contents);
+          setFilename("");
+        })
+        .catch((err) => {
+          alert("Fail to add record.");
+        });
     }
   };
 
@@ -77,10 +91,14 @@ export default function Explorer() {
 
     if (newFile) {
       setDropdown([...dropdown, false]);
-      ExplorerSrvc.addContent(newFile).then((contents) => {
-        setFilename("");
-        setContents(contents);
-      });
+      ExplorerSrvc.addContent(newFile)
+        .then((contents) => {
+          setFilename("");
+          setContents(contents);
+        })
+        .catch((err) => {
+          alert("Fail to add record.");
+        });
     }
   };
 
@@ -88,13 +106,24 @@ export default function Explorer() {
     console.log(id);
     e.stopPropagation();
 
-    ExplorerSrvc.deleteContent(id).then((contents) => setContents(contents));
+    ExplorerSrvc.deleteContent(id)
+      .then((contents) => setContents(contents))
+      .catch((err) => {
+        alert("Fail to delete record.");
+      });
   };
 
-  const handleRename = (content, newName) => {
-    ExplorerSrvc.updateContent({ ...content, name: newName }).then((contents) =>
-      setContents(contents)
-    );
+  const handleRename = (content) => {
+    let newName = prompt("Enter new name");
+    while (nameAlreadyExist(newName)) {
+      newName = prompt("Name already exist, please enter new name");
+    }
+
+    ExplorerSrvc.updateContent({ ...content, name: newName })
+      .then((contents) => setContents(contents))
+      .catch((err) => {
+        alert("Fail to update records.");
+      });
   };
 
   const handleOpenDrodown = (e, i) => {
@@ -129,8 +158,12 @@ export default function Explorer() {
     return contents?.find((content) => content.id === pastIndex)?.name;
   };
 
+  const closeAllDropDown = () => {
+    setDropdown(Array(dropdown.length).fill(false));
+  };
+
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper" onClick={closeAllDropDown}>
       <div className="topHeader">
         <div className="topHeader__left">
           <div className="breadcrumbs-group">

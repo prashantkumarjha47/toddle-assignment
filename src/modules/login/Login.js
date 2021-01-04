@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 
 import AuthSrv from "../../services/auth.service";
@@ -8,27 +8,33 @@ import "./Login.scss";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showError, setShowError] = useState(false);
 
   const history = useHistory();
 
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
+
   const onFormSubmit = async (e) => {
     e.preventDefault();
-    console.log(username, password);
+    setShowError(false);
     try {
       const response = await AuthSrv.login({ username, password });
-      console.log(response);
       localStorage.setItem("token", response.token);
       history.push("/explorer");
-      console.log(response);
-    } catch (error) {}
+    } catch (error) {
+      setShowError(true);
+    }
   };
 
   return (
     <div className="login">
       <div className="login-form">
         <form onSubmit={onFormSubmit} className="modal-content animate">
+          {showError && <p className="error-message">Login Failed!</p>}
           <div className="container">
-            <label forName="uname">
+            <label htmlFor="uname">
               <b>Username</b>
             </label>
             <input
@@ -40,7 +46,7 @@ export default function Login() {
               onChange={(e) => setUsername(e.target.value)}
             />
 
-            <label forName="psw">
+            <label htmlFor="psw">
               <b>Password</b>
             </label>
             <input

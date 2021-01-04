@@ -26,7 +26,7 @@ export default function Dropdown({
         <li>
           <button
             onClick={(e) => {
-              handleRename(content, `${content.name}_rename`);
+              handleRename(content);
               handleOpenDrodown(e, index);
             }}
             type="button"
