@@ -45,7 +45,7 @@ export default function Explorer() {
         alert("Fail to fetch records. Redirecting back to login page");
         history.push("/login");
       });
-  }, []);
+  }, [history]);
 
   const nameAlreadyExist = (name = filename) => {
     return contents
