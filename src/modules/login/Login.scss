@@ -3,6 +3,11 @@
   display: flex;
   margin: 0 auto;
   text-align: left;
+  height: 100vh;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+
   input[type="text"],
   input[type="password"] {
     width: 100%;
